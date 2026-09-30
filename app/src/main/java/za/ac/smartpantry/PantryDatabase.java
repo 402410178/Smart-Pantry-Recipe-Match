@@ -15,12 +15,16 @@ public class PantryDatabase extends SQLiteOpenHelper {
 
     public PantryDatabase(Context context) { super(context, DB_NAME, null, DB_VERSION); }
 
+    @Override public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
+    }
+
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE pantry (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, quantity REAL NOT NULL CHECK(quantity > 0), unit TEXT NOT NULL)");
         db.execSQL("CREATE TABLE recipes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL, steps TEXT NOT NULL)");
         db.execSQL("CREATE TABLE recipe_ingredients (recipe_id INTEGER NOT NULL REFERENCES recipes(id) ON DELETE CASCADE, name TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL, PRIMARY KEY(recipe_id,name))");
         db.execSQL("CREATE TABLE app_settings (setting_key TEXT PRIMARY KEY, setting_value TEXT NOT NULL)");
-        db.execSQL("PRAGMA foreign_keys=ON");
         seedRecipes(db);
         ContentValues settings = new ContentValues(); settings.put("setting_key", "expiry_alerts"); settings.put("setting_value", "1"); db.insert("app_settings", null, settings);
     }
