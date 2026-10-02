@@ -22,8 +22,25 @@ public class PantryActivity extends AppCompatActivity {
         recipes.setOnClickListener(v -> startActivity(new Intent(this, SuggestedRecipesActivity.class)));
         RecyclerView list = new RecyclerView(this); list.setLayoutManager(new LinearLayoutManager(this)); adapter = new IngredientAdapter(new IngredientAdapter.Listener() {
             @Override public void onTap(Ingredient item) { Intent i = new Intent(PantryActivity.this, IngredientFormActivity.class); i.putExtra("id", item.id); i.putExtra("name", item.name); i.putExtra("quantity", item.quantity); i.putExtra("unit", item.unit); startActivity(i); }
-            @Override public void onLongPress(Ingredient item) { new AlertDialog.Builder(PantryActivity.this).setTitle("Delete " + item.name + "?").setMessage("This removes the ingredient from your pantry.").setNegativeButton("Cancel", null).setPositiveButton("Delete", (d,w) -> { database.deleteIngredient(item.id); refresh(); Toast.makeText(PantryActivity.this,"Ingredient deleted",Toast.LENGTH_SHORT).show(); }).show(); }
+            @Override public void onLongPress(Ingredient item) { new AlertDialog.Builder(PantryActivity.this).setTitle("Delete " + item.name + "?").setMessage("This removes the ingredient from your pantry.").setNegativeButton("Cancel", null).setPositiveButton("Delete", (d,w) -> DatabaseExecutor.execute(() -> {
+                database.deleteIngredient(item.id);
+                runOnUiThread(() -> {
+                    if (!isFinishing() && !isDestroyed()) {
+                        Toast.makeText(PantryActivity.this,"Ingredient deleted",Toast.LENGTH_SHORT).show();
+                        refresh();
+                    }
+                });
+            })).show(); }
         }); list.setAdapter(adapter); root.addView(list, Ui.weighted()); refresh(); Ui.navigation(this, root);
     }
-    private void refresh() { if (adapter != null) adapter.setItems(database.getPantry()); }
+    private void refresh() {
+        if (adapter == null) return;
+        IngredientAdapter currentAdapter = adapter;
+        DatabaseExecutor.execute(() -> {
+            java.util.List<Ingredient> items = database.getPantry();
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed() && adapter == currentAdapter) currentAdapter.setItems(items);
+            });
+        });
+    }
 }

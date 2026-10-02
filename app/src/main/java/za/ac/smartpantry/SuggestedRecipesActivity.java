@@ -20,9 +20,20 @@ public class SuggestedRecipesActivity extends AppCompatActivity {
         android.widget.TextView empty = Ui.label(this,"",16); root.addView(empty);
         RecyclerView list = new RecyclerView(this); list.setLayoutManager(new LinearLayoutManager(this));
         adapter = new RecipeAdapter(recipe -> { Intent i = new Intent(this,RecipeDetailActivity.class); i.putExtra("recipe_id",recipe.id); startActivity(i); }); list.setAdapter(adapter); root.addView(list,Ui.weighted());
-        List<Ingredient> pantry = database.getPantry(); List<Recipe> matches = new ArrayList<>();
-        for (Recipe recipe : database.getRecipes()) if (RecipeMatcher.canMake(database.getRecipeIngredients(recipe.id),pantry)) matches.add(recipe);
-        adapter.setItems(matches); empty.setText(matches.isEmpty()?"No recipes match your pantry yet. Add more ingredients to see what you can make.":matches.size()+" recipe(s) you can make right now");
+        RecipeAdapter currentAdapter = adapter;
+        DatabaseExecutor.execute(() -> {
+            List<Ingredient> pantry = database.getPantry();
+            List<Recipe> matches = new ArrayList<>();
+            for (Recipe recipe : database.getRecipes()) {
+                if (RecipeMatcher.canMake(database.getRecipeIngredients(recipe.id), pantry)) matches.add(recipe);
+            }
+            runOnUiThread(() -> {
+                if (!isFinishing() && !isDestroyed() && adapter == currentAdapter) {
+                    currentAdapter.setItems(matches);
+                    empty.setText(matches.isEmpty()?"No recipes match your pantry yet. Add more ingredients to see what you can make.":matches.size()+" recipe(s) you can make right now");
+                }
+            });
+        });
         Ui.navigation(this,root);
     }
 }

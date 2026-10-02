@@ -58,10 +58,6 @@ Use the location where you extracted Gradle if it differs from `C:\Gradle`. Keep
 
 The matcher folds simple singular/plural variants and converts kg to g, litres to ml, and tablespoons to teaspoons. It deliberately rejects different measurement dimensions (for example, grams cannot satisfy millilitres). It is a small deterministic rule set rather than natural-language understanding.
 
-## Development stages and commit plan
-
-The current repository contains ten real, sequential commits. Each corresponds to a distinct code or documentation milestone. They were created during this build session on 30 September 2026; they must not be described as work spread across earlier days. Read `SUBMISSION_GUIDE.md` for the matching stage-by-stage checks, GitHub instructions, demonstration script, report outline, screenshot list, and packaging checklist.
-
 ## Known verification boundary
 
 Five plain-Java matcher smoke scenarios have been compiled and passed in the supplied workspace. The JUnit regression suite is included in `app/src/test`, but the full Android Gradle build and emulator flows have not been run here because Android SDK/Studio and Gradle are not installed in this workspace. Run the listed Gradle commands and complete the emulator manual checklist before claiming those checks passed.
